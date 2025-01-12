@@ -8,9 +8,17 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "django (==4.2)",
+    "djangorestframework (==3.14.0)",
+    "djangorestframework-jwt (==1.11.0)",
+    "djangorestframework-simplejwt (>=5.4.0,<6.0.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+setuptools = "^75.8.0"
+
