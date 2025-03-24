@@ -1,0 +1,4 @@
+*.html linguist-language=plaintext
+*.css linguist-language=plaintext
+*.js linguist-language=plaintext
+
