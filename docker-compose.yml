@@ -1,0 +1,57 @@
+services:
+  web:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: always
+    command: poetry run gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    depends_on:
+      - db
+      - redis
+      - celery
+
+  db:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    command: poetry run celery -A config worker -l info
+    depends_on:
+      - redis
+      - db
+    restart: always
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+    restart: always
+
+volumes:
+  postgres_data:

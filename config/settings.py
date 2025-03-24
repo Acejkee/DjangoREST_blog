@@ -12,11 +12,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-e^xe^_t0o*%a_32rkd-@gb4_$ftg+fx$$nav!i4_kurpbmmdp6'
+SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -30,11 +32,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'djoser',
+    'drf_yasg',
+    'djcelery_email',
     'rest_framework',
     'rest_framework_simplejwt',
 
 
-    'apps.users.apps.UsersConfig'
+    'apps.users.apps.UsersConfig',
+    'apps.blog.apps.BlogConfig',
 ]
 
 MIDDLEWARE = [
@@ -68,10 +74,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -99,9 +116,13 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_DIR = os.path.join(BASE_DIR, 'static')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Путь для собранных статических файлов
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static/'),  # Путь к вашим статическим файлам
+]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -114,8 +135,23 @@ REST_FRAMEWORK = {
 }
 
 
+DJOSER = {
+    "SERIALIZERS": {
+        'user_create': 'apps.users.serializers.CustomUserSerializer',
+        'current_user': 'apps.users.serializers.CustomUserSerializer',
+        'user': 'apps.users.serializers.CustomUserSerializer',
+    },
+    'LOGIN_FIELD': 'email',  # Используйте email для аутентификации
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'ACTIVATION_URL': 'activate/{uid}/{token}/',
+    'SEND_ACTIVATION_EMAIL': True,
+    # Другие настройки Djoser...
+}
+
+
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -143,7 +179,7 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",
 
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=60),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 
     "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
@@ -153,3 +189,32 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+EMAIL_HOST = 'mail.hosting.reg.ru'
+EMAIL_PORT = 587  # Используйте 587 для TLS
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'info@bit-service-nt.ru'  # Ваш почтовый ящик
+EMAIL_HOST_PASSWORD = '12345qwert'  # Ваш пароль от почтового ящика
+DEFAULT_FROM_EMAIL = 'info@bit-service-nt.ru'
+
+
+
+# Celery settings
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+# CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+# CELERY_CACHE_BACKEND = 'redis://127.0.0.1:6379'
+# CELERY_ACCEPT_CONTENT = ["application/json"]
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_RESULT_SERIALIZER = "json"
+# CELERY_TIMEZONE = TIME_ZONE
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_CACHE_BACKEND = 'redis://redis:6379'
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
