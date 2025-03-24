@@ -16,7 +16,7 @@
 ## Запуск:
 
 1. `git clone https://github.com/Acejkee/DjangoREST_blog.git`
-2. `cd <your_repository_name>`
+2. `cd DjangoREST_blog`
 3. `cp .env.example .env` (заполните `.env`)
 4. `docker-compose up -d --build`
 5. `docker-compose run --rm web python manage.py migrate`
